@@ -42,7 +42,7 @@ The files are as follows:
 
 * LICENSE: license file
 
-* execute.py: a toy example of the GPCA usage
+* execute.py: a toy example of the GPCA usage (taken from [this](https://scikit-learn.org/dev/auto_examples/decomposition/plot_pca_iris.html#sphx-glr-auto-examples-decomposition-plot-pca-iris-py))
 
 * GPCA.py: generalized principal component analisis code
 
