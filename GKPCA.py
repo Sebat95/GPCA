@@ -9,11 +9,6 @@ class GKPCA:
     _MAX_EPOCHS = int(1e4)  # max training epochs for each component
     _EPS = 1e-5  # threshold for convergence
 
-    '''
-    the generic_function should be already the derivative of the function we want to apply,
-    since we are going to compute the gradient with it.
-    Furthermore, the signature of the constructor is taken from sklearn.decomposition.kpca
-    '''
     def __init__(
             self,
             n_components,
@@ -26,6 +21,11 @@ class GKPCA:
             n_jobs=None,
             inverse_rate=1.0
     ):
+        """
+        the generic_function should be already the derivative of the function we want to apply,
+        since we are going to compute the gradient with it.
+        Furthermore, the signature of the constructor is taken from sklearn.decomposition.kpca
+        """
         if kernel == "precomputed":
             raise ValueError("Precomputed kernel is not supported")
         self.X_transformed_fit = None  # result of the transformed input
@@ -45,10 +45,6 @@ class GKPCA:
         self.n_jobs = n_jobs
         self.inverse_rate = inverse_rate
 
-    '''
-    X is the input data set and should be a matrix MxN with M number of samples and N sample dimensions
-    '''
-
     def fit(self, X):
         if hasattr(X, "tocsr"):
             raise NotImplementedError(
@@ -62,7 +58,9 @@ class GKPCA:
         self.K = self._get_kernel(data)
         # center with the Gram Equation in the kernel space
         one_normalized = np.ones(X.shape[0]) / X.shape[0]
-        data = self.K - np.dot(one_normalized, self.K) - np.dot(self.K, one_normalized) + np.dot(one_normalized, np.dot(self.K, one_normalized))
+        data = self.K - np.dot(one_normalized, self.K) - np.dot(self.K, one_normalized) + np.dot(one_normalized,
+                                                                                                 np.dot(self.K,
+                                                                                                        one_normalized))
 
         # weights mere shape initializations
         self.alphas = np.ones([self.n_components, X.shape[0]])
@@ -81,17 +79,15 @@ class GKPCA:
                     break
                 old = core.copy()  # keep track of previous epoch result
                 # compute new core values with kernel gradient and generic function
-                core = self.f(np.dot(core, data) / math.sqrt(np.dot(np.dot(core, data),  core.transpose())))
+                core = self.f(np.dot(core, data) / math.sqrt(np.dot(np.dot(core, data), core.transpose())))
             # compute alpha and score
-            self.alphas[c] = core / math.sqrt(np.dot(np.dot(core, data),  core.transpose()))
+            self.alphas[c] = core / math.sqrt(np.dot(np.dot(core, data), core.transpose()))
             self.scores[c] = np.dot(self.alphas[c].transpose(), data)
 
             # greedly remove previously found component from data
-            data -= np.dot(np.vstack(np.dot(self.alphas[c].transpose(), data.transpose())), np.vstack(np.dot(self.alphas[c].transpose(), data.transpose())).transpose())
+            data -= np.dot(np.vstack(np.dot(self.alphas[c].transpose(), data.transpose())),
+                           np.vstack(np.dot(self.alphas[c].transpose(), data.transpose())).transpose())
 
-    '''
-    X is the input data set and should be a matrix MxN with M number of samples and N sample dimensions
-    '''
     def transform(self, X):
         # apply kernel and center in kernel space
         data = self._get_kernel(X)
@@ -120,10 +116,14 @@ class GKPCA:
     def inverse_transform(self, X):
         return np.dot(self._get_kernel(X, self.X_transformed_fit), self.dual_coef)
 
-    '''
-    taken from sklearn.decomposition.kpca
-    '''
-    def _get_kernel(self, X, Y = None):
+    def fit_transform(self, X):
+        self.fit(X)
+        return self.transform(X)
+
+    def _get_kernel(self, X, Y=None):
+        """
+        taken from sklearn.decomposition.kpca
+        """
         if callable(self.kernel):
             params = self.kernel_params or {}
         else:

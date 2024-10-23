@@ -5,22 +5,20 @@ import numpy as np
 
 class GPCA:
     _MAX_EPOCHS = int(1e4)  # max training epochs for each component
-    _EPS = 1e-5   # threshold for convergence
+    _EPS = 1e-5  # threshold for convergence
 
-    '''
-    the function should be already the derivative of the function we want to apply,
-    since we are going to compute the gradient with it
-    '''
+
     def __init__(self, n_components: int, generic_function: Callable[[float], float]):
+        """
+        the function should be already the derivative of the function we want to apply,
+        since we are going to compute the gradient with it
+        """
         self.W = None  # fitted weights
         self.Wt = None  # weights transposed
         self.means = None  # mean of the original fitted data
         self.f = np.vectorize(generic_function)  # vectorized generic function
         self.n_components = n_components  # number of requested principal components
 
-    '''
-    X is the input data set and should be a matrix MxN with M number of samples and N sample dimensions
-    '''
     def fit(self, X):
         # compute mean by dimensions and normalize initial data set
         self.means = np.mean(X, axis=0)
@@ -48,13 +46,15 @@ class GPCA:
             data = np.dot(data, np.identity(X.shape[1]) - self.W[c] * np.vstack(self.W[c]))
         self.Wt = self.W.transpose()
 
-    '''
-    X is the input data set and should be a matrix MxN with M number of samples and N sample dimensions
-    '''
+
+
     def transform(self, X):
         data = X - self.means
         return np.dot(data, self.Wt)
 
-
     def inverse_transform(self, X):
         return np.dot(X, self.W) + self.means
+
+    def fit_transform(self, X):
+        self.fit(X)
+        return self.transform(X)
