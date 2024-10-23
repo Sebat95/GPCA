@@ -2,8 +2,7 @@
 
  
 
-This repository contains the works related to my thesis, including the source code, data, and any other relevant materials. Additionally, it provides a link to the published article.
-
+This repository contains the works related to my thesis, releated to the discovery and implementation of a generalization of principal component analysis and its kernel version.
  
 
 ## Table of Contents
@@ -26,7 +25,7 @@ This repository contains the works related to my thesis, including the source co
 
  
 
-In this repository, you will find the various components of my thesis work. The original code was written for Matlab, this had been cleaned up and generalized neatly in a python class.
+In this repository, you will find the various components of my thesis work. The original code was written for Matlab, this had been cleaned up and generalized neatly in two python classes.
 
  
 
@@ -64,6 +63,8 @@ The classes try to follow the [sklearn.decomposition.PCA](https://scikit-learn.o
 
 The published article related to this thesis work can be found [here](https://ieeexplore.ieee.org/abstract/document/9054154).
 The whole algorithm is explained much better and clear results are given.
+
+If you need anymore details, this is my [PoliTo thesis](https://webthesis.biblio.polito.it/13126/) and this is my [UIC thesis](https://indigo.uic.edu/articles/thesis/A_Generalization_of_Principal_Component_Analysis/13475391?file=25863297).
 
  
 
