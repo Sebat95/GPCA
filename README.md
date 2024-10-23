@@ -46,7 +46,7 @@ The files are as follows:
 
 * GPCA.py: generalized principal component analisis code
 
-* KGPCA: generalized kernel principal component analisis code (todo)
+* KGPCA: generalized kernel principal component analisis code
 
  
 
@@ -54,7 +54,7 @@ The files are as follows:
 
  
 
-The classes try to follow the sklearn.decomposition._BasePCA, so use them as such.
+The classes try to follow the sklearn.decomposition.PCA and sklearn.decomposition.KernelPCA respectively, so use them as such.
 
  
 
