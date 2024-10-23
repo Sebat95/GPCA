@@ -4,7 +4,7 @@ import numpy as np
 
 
 class GPCA:
-    _MAX_EPOCHS = 1000  # max training epochs for each component
+    _MAX_EPOCHS = int(1e4)  # max training epochs for each component
     _EPS = 1e-5   # threshold for convergence
 
     '''

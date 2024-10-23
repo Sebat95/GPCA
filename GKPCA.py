@@ -1,18 +1,19 @@
 import math
-from typing import Callable, Union
-from sklearn.metrics.pairwise import linear_kernel, pairwise_kernels
+from typing import Callable
+from sklearn.metrics.pairwise import pairwise_kernels
 import numpy as np
+from scipy import linalg
 
 
 class GKPCA:
-    _MAX_EPOCHS = 1000  # max training epochs for each component
+    _MAX_EPOCHS = int(1e4)  # max training epochs for each component
     _EPS = 1e-5  # threshold for convergence
 
     '''
-    the function should be already the derivative of the function we want to apply,
-    since we are going to compute the gradient with it
+    the generic_function should be already the derivative of the function we want to apply,
+    since we are going to compute the gradient with it.
+    Furthermore, the signature of the constructor is taken from sklearn.decomposition.kpca
     '''
-
     def __init__(
             self,
             n_components,
@@ -22,8 +23,13 @@ class GKPCA:
             degree=3,
             coef0=1,
             kernel_params=None,
-            n_jobs=None
+            n_jobs=None,
+            inverse_rate=1.0
     ):
+        if kernel == "precomputed":
+            raise ValueError("Precomputed kernel is not supported")
+        self.X_transformed_fit = None  # result of the transformed input
+        self.dual_coef = None  # duality coefficients
         self.K = None  # kernel of the centered input
         self.alphas = None  # alphas of the kernel principal components
         self.scores = None  # scores of the kernel principal components
@@ -37,12 +43,18 @@ class GKPCA:
         self.degree = degree
         self.coef0 = coef0
         self.n_jobs = n_jobs
+        self.inverse_rate = inverse_rate
 
     '''
     X is the input data set and should be a matrix MxN with M number of samples and N sample dimensions
     '''
 
     def fit(self, X):
+        if hasattr(X, "tocsr"):
+            raise NotImplementedError(
+                "Sparse matrices are not supported"
+            )
+
         # compute mean by dimensions and normalize initial data set
         self.means = np.mean(X, axis=0)
         data = X - self.means
@@ -90,19 +102,28 @@ class GKPCA:
                 ((1 / n_samples) ** 2) * np.concatenate(self.K).sum()
         )
         # initialize result and compute first principal component
-        result = np.zeros([X.shape[0], self.n_components])
-        result[:, 0] = np.dot(data, self.alphas[0])
+        self.X_transformed_fit = np.zeros([X.shape[0], self.n_components])
+        self.X_transformed_fit[:, 0] = np.dot(data, self.alphas[0])
         # compute progressively each next principal component
         for c in range(1, self.n_components):
             # greedly remove previous principal component
-            data -= np.dot(np.vstack(result[:, c - 1]), np.vstack(self.scores[c - 1]).transpose())
-            result[:, c] = np.dot(data, self.alphas[c])
-        return result
+            data -= np.dot(np.vstack(self.X_transformed_fit[:, c - 1]), np.vstack(self.scores[c - 1]).transpose())
+            self.X_transformed_fit[:, c] = np.dot(data, self.alphas[c])
+
+        # compute duality coefficient for inverting the transformation (taken from sklearn.decomposition.kpca)
+        k_result = self._get_kernel(self.X_transformed_fit)
+        k_result.flat[:: n_samples + 1] += self.inverse_rate
+        self.dual_coef = linalg.solve(k_result, X, sym_pos=True, overwrite_a=True)
+
+        return self.X_transformed_fit
 
     def inverse_transform(self, X):
-        pass #TODO
+        return np.dot(self._get_kernel(X, self.X_transformed_fit), self.dual_coef)
 
-    def _get_kernel(self, X, Y=None):
+    '''
+    taken from sklearn.decomposition.kpca
+    '''
+    def _get_kernel(self, X, Y = None):
         if callable(self.kernel):
             params = self.kernel_params or {}
         else:
