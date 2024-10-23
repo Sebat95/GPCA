@@ -54,7 +54,7 @@ The files are as follows:
 
  
 
-The classes try to follow the sklearn.decomposition.PCA and sklearn.decomposition.KernelPCA respectively, so use them as such.
+The classes try to follow the [sklearn.decomposition.PCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html) and [sklearn.decomposition.KernelPCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.KernelPCA.html) respectively, so use them as such.
 
  
 
