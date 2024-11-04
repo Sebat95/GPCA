@@ -26,7 +26,7 @@ pca.fit(X)
 X_pca = pca.transform(X)
 X_gpca = gpca.transform(X)
 
-# reconstruction error
+# Reconstruction error.
 print(np.mean(np.linalg.norm(X - pca.inverse_transform(X_pca), axis=1)))
 print(np.mean(np.linalg.norm(X - gpca.inverse_transform(X_gpca), axis=1)))
 
@@ -42,6 +42,6 @@ kgpca.fit(X)
 X_kpca = kpca.transform(X)
 X_gkpca = kgpca.transform(X)
 
-# reconstruction error
+# Reconstruction error.
 print(np.mean(np.linalg.norm(X - kpca.inverse_transform(X_kpca), axis=1)))
 print(np.mean(np.linalg.norm(X - kgpca.inverse_transform(X_gkpca), axis=1)))

@@ -6,8 +6,8 @@ from scipy import linalg
 
 
 class GKPCA:
-    _MAX_EPOCHS = int(1e4)  # max training epochs for each component
-    _EPS = 1e-5  # threshold for convergence
+    _MAX_EPOCHS = int(1e4)  # Max training epochs for each component.
+    _EPS = 1e-5  # Threshold for convergence.
 
     def __init__(
             self,
@@ -22,22 +22,22 @@ class GKPCA:
             inverse_rate=1.0
     ):
         """
-        the generic_function should be already the derivative of the function we want to apply,
+        The generic_function should be already the derivative of the function we want to apply,
         since we are going to compute the gradient with it.
         Furthermore, the signature of the constructor is taken from sklearn.decomposition.kpca
         """
         if kernel == "precomputed":
             raise ValueError("Precomputed kernel is not supported")
-        self.X_transformed_fit = None  # result of the transformed input
-        self.dual_coef = None  # duality coefficients
-        self.K = None  # kernel of the centered input
-        self.alphas = None  # alphas of the kernel principal components
-        self.scores = None  # scores of the kernel principal components
-        self.means = None  # mean of the original fitted data
-        self.kernel = kernel  # {‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘cosine’, ‘precomputed’} or callable
-        self.f = np.vectorize(generic_function)  # vectorized generic function
-        self.n_components = n_components  # number of requested principal components
-        self.kernel = kernel
+        self.X_transformed_fit = None  # Result of the transformed input.
+        self.dual_coef = None  # Duality coefficients.
+        self.K = None  # Kernel of the centered input.
+        self.alphas = None  # Alphas of the kernel principal components.
+        self.scores = None  # Scores of the kernel principal components.
+        self.means = None  # Mean of the original fitted data.
+        self.kernel = kernel  # {‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘cosine’, ‘precomputed’} or callable.
+        self.f = np.vectorize(generic_function)  # Vectorized generic function.
+        self.n_components = n_components  # Number of requested principal components.
+        # Kernel various sklearn.metrics.pairwise.pairwise_kernels params.
         self.kernel_params = kernel_params
         self.gamma = gamma
         self.degree = degree
@@ -51,45 +51,45 @@ class GKPCA:
                 "Sparse matrices are not supported"
             )
 
-        # compute mean by dimensions and normalize initial data set
+        # Compute mean by dimensions and normalize initial data set.
         self.means = np.mean(X, axis=0)
         data = X - self.means
-        # apply kernel
+        # Apply kernel.
         self.K = self._get_kernel(data)
-        # center with the Gram Equation in the kernel space
+        # Center with the Gram Equation in the kernel space.
         one_normalized = np.ones(X.shape[0]) / X.shape[0]
         data = self.K - np.dot(one_normalized, self.K) - np.dot(self.K, one_normalized) + np.dot(one_normalized,
                                                                                                  np.dot(self.K,
                                                                                                         one_normalized))
 
-        # weights mere shape initializations
+        # Weights mere shape initializations.
         self.alphas = np.ones([self.n_components, X.shape[0]])
         self.scores = np.ones([self.n_components, X.shape[0]])
 
-        # compute each component
+        # Compute each component.
         for c in range(self.n_components):
-            old = np.zeros(X.shape[0])  # previous epoch current component weight
-            # initialize weight (core values) as the normalized max norm sample in the kernel space
+            old = np.zeros(X.shape[0])  # Previous epoch current component weight.
+            # Initialize weight (core values) as the normalized max norm sample in the kernel space.
             diag = np.diag(data)
             opt_idx = np.where(diag == max(diag))
             core = data[opt_idx] / math.sqrt(data[opt_idx][0][opt_idx])
-            for _ in range(GKPCA._MAX_EPOCHS):  # for at most _MAX_EPOCHS
-                # if the current change was at least of _EPS entity
+            for _ in range(GKPCA._MAX_EPOCHS):  # For at most _MAX_EPOCHS.
+                # If the current change was at least of _EPS entity.
                 if np.linalg.norm(core - old) < GKPCA._EPS:
                     break
-                old = core.copy()  # keep track of previous epoch result
-                # compute new core values with kernel gradient and generic function
+                old = core.copy()  # Keep track of previous epoch result.
+                # Compute new core values with kernel gradient and generic function.
                 core = self.f(np.dot(core, data) / math.sqrt(np.dot(np.dot(core, data), core.transpose())))
-            # compute alpha and score
+            # Compute alpha and score.
             self.alphas[c] = core / math.sqrt(np.dot(np.dot(core, data), core.transpose()))
             self.scores[c] = np.dot(self.alphas[c].transpose(), data)
 
-            # greedly remove previously found component from data
+            # Greedly remove previously found component from data.
             data -= np.dot(np.vstack(np.dot(self.alphas[c].transpose(), data.transpose())),
                            np.vstack(np.dot(self.alphas[c].transpose(), data.transpose())).transpose())
 
     def transform(self, X):
-        # apply kernel and center in kernel space
+        # Apply kernel and center in kernel space.
         data = self._get_kernel(X)
         n_samples = X.shape[0]
         data -= (
@@ -97,16 +97,16 @@ class GKPCA:
                 1 / n_samples * sum(self.K, 1) -
                 ((1 / n_samples) ** 2) * np.concatenate(self.K).sum()
         )
-        # initialize result and compute first principal component
+        # Initialize result and compute first principal component.
         self.X_transformed_fit = np.zeros([X.shape[0], self.n_components])
         self.X_transformed_fit[:, 0] = np.dot(data, self.alphas[0])
-        # compute progressively each next principal component
+        # Compute progressively each next principal component.
         for c in range(1, self.n_components):
-            # greedly remove previous principal component
+            # Greedly remove previous principal component.
             data -= np.dot(np.vstack(self.X_transformed_fit[:, c - 1]), np.vstack(self.scores[c - 1]).transpose())
             self.X_transformed_fit[:, c] = np.dot(data, self.alphas[c])
 
-        # compute duality coefficient for inverting the transformation (taken from sklearn.decomposition.kpca)
+        # Compute duality coefficient for inverting the transformation (taken from sklearn.decomposition.kpca).
         k_result = self._get_kernel(self.X_transformed_fit)
         k_result.flat[:: n_samples + 1] += self.inverse_rate
         self.dual_coef = linalg.solve(k_result, X, sym_pos=True, overwrite_a=True)
@@ -121,9 +121,6 @@ class GKPCA:
         return self.transform(X)
 
     def _get_kernel(self, X, Y=None):
-        """
-        taken from sklearn.decomposition.kpca
-        """
         if callable(self.kernel):
             params = self.kernel_params or {}
         else:
