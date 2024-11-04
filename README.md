@@ -23,8 +23,6 @@ If you need anymore details, there are also my thesis that extend the article:
 
 - [Usage](#usage)
 
-- [Published Article](#published-article)
-
 - [License](#license)
 
  
@@ -51,9 +49,9 @@ The files are as follows:
 
 * execute.py: a toy example of the GPCA usage (taken from [this](https://scikit-learn.org/dev/auto_examples/decomposition/plot_pca_iris.html#sphx-glr-auto-examples-decomposition-plot-pca-iris-py))
 
-* GPCA.py: generalized principal component analisis code
+* GPCA.py: generalized principal component analysis code
 
-* KGPCA.py: generalized kernel principal component analisis code
+* GKPCA.py: generalized kernel principal component analysis code
 
  
 
