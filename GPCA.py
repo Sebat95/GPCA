@@ -6,7 +6,6 @@ class GPCA:
     _MAX_EPOCHS = int(1e4)  # Max training epochs for each component.
     _EPS = 1e-5  # Threshold for convergence.
 
-
     def __init__(self, n_components: int, generic_function: Callable[[float], float]):
         """
         The function should be already the derivative of the function we want to apply,
@@ -44,8 +43,6 @@ class GPCA:
             # Greedly remove previously found component from data.
             data = np.dot(data, np.identity(X.shape[1]) - self.W[c] * np.vstack(self.W[c]))
         self.Wt = self.W.transpose()
-
-
 
     def transform(self, X):
         data = X - self.means
